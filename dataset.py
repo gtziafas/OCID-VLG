@@ -14,7 +14,6 @@ from skimage.draw import polygon
 from skimage.filters import gaussian
 
 
-
 class GraspTransforms:
     # Class for converting cv2-like rectangle formats and generate grasp-quality-angle-width masks
 
@@ -99,10 +98,10 @@ class OCIDVLGDataset(data.Dataset):
                  refer_dir,
                  split, 
                  transform_img = None,
-                 transform_grasp = None,
-                 with_depth = False, 
-                 with_segm_mask = False,
-                 with_grasp_masks = False
+                 transform_grasp = GraspTransforms(),
+                 with_depth = True, 
+                 with_segm_mask = True,
+                 with_grasp_masks = True
     ):
         super(OCIDVLGDataset, self).__init__()
         self.root_dir = root_dir
@@ -217,7 +216,7 @@ class OCIDVLGDataset(data.Dataset):
         
         if self.with_depth:
             depth_path = os.path.join(self.root_dir, self.depth_imgs[n])
-            depth = get_depth_from_path(depth_path)
+            depth = self.get_depth_from_path(depth_path)
             result = {**result, 'depth': torch.from_numpy(depth) if self.transform_img else depth}
         
         if self.with_segm_mask:
@@ -261,7 +260,7 @@ class OCIDVLGDataset(data.Dataset):
         img_path = os.path.join(self.root_dir, self.imgs[n])
         return self.get_image_from_path(img_path)
     
-    def get_annotated_image(self, n):
+    def get_annotated_image(self, n, text=True):
         sample = self.__getitem__(n)
         
         img, sent, grasps, bbox = sample['img'], sample['sentence'], sample['grasps'], sample['bbox']
@@ -280,5 +279,6 @@ class OCIDVLGDataset(data.Dataset):
                 tmp = cv2.line(tmp, ptA, ptD, (0xff,0,0), 2)
         
         tmp = cv2.rectangle(tmp, (bbox[0],bbox[1]), (bbox[2],bbox[3]), (0,255,0), 2)
-        tmp = cv2.putText(tmp, sent, (0,10), cv2.FONT_HERSHEY_PLAIN, 1, (0,0,0), 2, cv2.LINE_AA)
+        if text:
+            tmp = cv2.putText(tmp, sent, (0,10), cv2.FONT_HERSHEY_PLAIN, 1, (0,0,0), 2, cv2.LINE_AA)
         return tmp

@@ -25,7 +25,7 @@ Download our OCID-VLG dataset from [this HTTP URL](https://github.com/gtziafas/O
 
 ### Load API
 You can load the dataset using the ``OCIDVLGDataset`` class provided in this repo, which inherits from ``torch.utils.data.Dataset``. The usage is as following:
-```
+```python
 from dataset import OCIDVLGDataset
 
 root_dir = 'your root path here'

@@ -95,7 +95,6 @@ class OCIDVLGDataset(data.Dataset):
 
     def __init__(self, 
                  root_dir,
-                 refer_dir,
                  split, 
                  transform_img = None,
                  transform_grasp = GraspTransforms(),
@@ -111,7 +110,7 @@ class OCIDVLGDataset(data.Dataset):
                           'test': 'test_expressions.json'
                          }
         self.split = split
-        self.refer_dir = refer_dir
+        self.refer_dir = os.path.join(root_dir, "OCID-Ref")
         
         self.transform_img = transform_img
         self.transform_grasp = transform_grasp

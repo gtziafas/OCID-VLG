@@ -6,7 +6,7 @@ Pillow==9.5.0
 Pillow==9.5.0
 segment_anything==1.0
 Shapely==2.0.1
-skimage==0.0
+scikit-image
 torch==2.0.0
 torchvision==0.15.1
 tqdm==4.65.0

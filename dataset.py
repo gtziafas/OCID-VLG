@@ -253,7 +253,7 @@ class OCIDVLGDataset(data.Dataset):
 
     @functools.lru_cache(maxsize=None)
     def get_depth_from_path(self, path):
-        return cv2.imread(path, cv2.IMREAD_UNCHANGED)
+        return cv2.imread(path, cv2.IMREAD_UNCHANGED).astype(np.float32) / 1000. # mm -> m
     
     def get_image(self, n):
         img_path = os.path.join(self.root_dir, self.imgs[n])

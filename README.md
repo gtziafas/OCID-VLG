@@ -44,7 +44,7 @@ The sample structure is:
 #                         }
 ```
 
-you can further pass a transform for your images (e.g. standard ``torchvision.transforms``) when defining the dataset, using the key ``transform_img``, to introduce your desired pre-processing. This will affect the `img` component, `depth` and `mask` will be simply tensorized.
+you can further pass a transform for your images (e.g. standard ``torchvision.transforms``) when defining the dataset, using the key ``transform_img``, to introduce your desired pre-processing. This will affect the `img` component, `depth` and `mask` will be simply tensorized. If you just want the grasp rectangles without pixel-level mask, pass ``transform_grasp=None`` when defining the dataset.
 
 ## Benchmarking
 Placeholder

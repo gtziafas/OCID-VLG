@@ -95,7 +95,7 @@ def default_model(device=DEVICE):
 				'stability_score_thresh': .98,
 				'crop_n_layers':1,
 				'crop_n_points_downscale_factor':2,
-				'min_mask_region_area':10000}
+				'min_mask_region_area':10000},
 		'clip': {'visual': 'RN50',
 				 'prompt_engineering': True,
 				 'this_is': True}

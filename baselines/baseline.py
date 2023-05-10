@@ -20,7 +20,7 @@ class TwoStageBaseline(nn.Module):
 	@torch.no_grad()
 	def predict_grasp(self, imgs, masks):
 		# imgs: (B, C, H, W), # masks: (B, H, W)
-		
+		pass		
 
 	@torch.no_grad()
 	def predict(self, ):

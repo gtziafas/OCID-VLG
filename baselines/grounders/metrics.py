@@ -21,7 +21,7 @@ import cv2
 
 def segmentation_metrics(preds, masks, device):
     iou_list = []
-    for pred, mask in zip(preds, masks)
+    for pred, mask in zip(preds, masks):
         # pred: (H, W): bool, mask: (H, W): uint8
         mask = mask.bool()
         # iou

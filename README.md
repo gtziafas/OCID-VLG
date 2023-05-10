@@ -14,7 +14,7 @@ Create a python3 venv and use ``pip install -r requirements.txt``.
 ## Dataset
 
 ### Download
-Download our OCID-VLG dataset from [this HTTP URL](https://github.com/gtziafas/OCID-VLG/edit/main/README.md) and export it in your desired ``$ROOT`` path.
+Download our OCID-VLG dataset from [this HTTP URL]([https://github.com/gtziafas/OCID-VLG/edit/main/README.md](https://drive.google.com/file/d/19aBa4WfSeX9ThY3B8MnpBIiHUop6pvJM/view?usp=share_link)) and export it in your desired ``$ROOT`` path.
 
 ### Load API
 You can load the dataset using the ``OCIDVLGDataset`` class provided in this repo, which inherits from ``torch.utils.data.Dataset``. The usage is as following:

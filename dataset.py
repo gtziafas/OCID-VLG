@@ -184,9 +184,10 @@ class OCIDVLGDataset(data.Dataset):
         sent = self.sentences[n]
         target = self.targets[n]
         target_idx = self.class_instance_names[target]
-        assert str(target_idx) in os.listdir(annos_path)
+        assert sent_id in os.listdir(annos_path)
         
-        anno_path = os.path.join(annos_path, str(target_idx),  img_name.split('.')[0] + '.txt')
+        # anno_path = os.path.join(annos_path, str(target_idx),  img_name.split('.')[0] + '.txt')
+        anno_path = os.path.join(annos_path, str(sent_id),  img_name.split('.')[0] + '.txt')
         with open(anno_path, "r") as f:
                 points_list, boxes_list = [], []
                 for count, line in enumerate(f):

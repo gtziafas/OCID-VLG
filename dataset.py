@@ -282,3 +282,64 @@ class OCIDVLGDataset(data.Dataset):
         if text:
             tmp = cv2.putText(tmp, sent, (0,10), cv2.FONT_HERSHEY_PLAIN, 1, (0,0,0), 2, cv2.LINE_AA)
         return tmp
+
+    def visualization(self, n, save_path):
+        s = self.__getitem__(n)
+
+        rgb = s['img']
+        depth = (0xff * s['depth'] / 3).astype(np.uint8)
+        ii = self.get_annotated_image(n, text=False)
+        sentence = s['sentence']
+        msk = s['mask']
+        msk_img = (rgb * 0.3).astype(np.uint8).copy()
+        msk_img[msk, 0] = 255
+
+        fig = plt.figure(figsize=(25, 10))
+
+        ax = fig.add_subplot(2, 4, 1)
+        ax.imshow(rgb)
+        ax.set_title('RGB')
+        ax.axis('off')
+
+        ax = fig.add_subplot(2, 4, 2)
+        ax.imshow(depth, cmap='gray')
+        ax.set_title('Depth')
+        ax.axis('off')
+
+        ax = fig.add_subplot(2, 4, 3)
+        ax.imshow(msk_img)
+        ax.set_title('Segm Mask')
+        ax.axis('off')
+
+        ax = fig.add_subplot(2, 4, 4)
+        ax.imshow(ii)
+        ax.set_title('Box & Grasp')
+        ax.axis('off')
+
+        ax = fig.add_subplot(2, 4, 5)
+        plot = ax.imshow(s['grasp_masks']['pos'], cmap='jet', vmin=0, vmax=1)
+        ax.set_title('Position')
+        ax.axis('off')
+        plt.colorbar(plot)
+
+        ax = fig.add_subplot(2, 4, 6)
+        plot = ax.imshow(s['grasp_masks']['qua'], cmap='jet', vmin=0, vmax=1)
+        ax.set_title('Quality')
+        ax.axis('off')
+        plt.colorbar(plot)
+
+        ax = fig.add_subplot(2, 4, 7)
+        plot = ax.imshow(s['grasp_masks']['ang'], cmap='rainbow', vmin=-np.pi / 2, vmax=np.pi / 2)
+        ax.set_title('Angle')
+        ax.axis('off')
+        plt.colorbar(plot)
+
+        ax = fig.add_subplot(2, 4, 8)
+        plot = ax.imshow(s['grasp_masks']['wid'], cmap='jet', vmin=0, vmax=1)
+        ax.set_title('Width')
+        ax.axis('off')
+        plt.colorbar(plot)
+
+        plt.suptitle(f"{sentence}", fontsize=20)
+        plt.tight_layout()
+        plt.savefig(os.path.join(save_path, f"sample_{n}.png"))

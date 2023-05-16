@@ -92,33 +92,3 @@ multiple_templates = [
     'a painting of the {}.',
     'a painting of a {}.',
 ]
-
-
-def build_text_embedding(categories, prompt_engineering=True, this_is=True):
-  if prompt_engineering:
-    templates = multiple_templates
-  else:
-    templates = single_template
-
-  with torch.no_grad():
-    all_text_embeddings = []
-    print('Building text embeddings...')
-    for category in tqdm(categories):
-      texts = [
-        template.format(processed_name(category['name'], rm_dot=True),
-                        article=article(category['name']))
-        for template in templates]
-      if this_is:
-        texts = [
-                 'This is ' + text if text.startswith('a') or text.startswith('the') else text 
-                 for text in texts
-                 ]
-      texts = clip.tokenize(texts).to(device) #tokenize
-      text_embeddings = model.encode_text(texts) #embed with text encoder
-      text_embeddings /= text_embeddings.norm(dim=-1, keepdim=True)
-      text_embedding = text_embeddings.mean(dim=0) #average accross prompt templates
-      text_embedding /= text_embedding.norm()
-      all_text_embeddings.append(text_embedding)
-    all_text_embeddings = torch.stack(all_text_embeddings, dim=1)
-    
-  return all_text_embeddings.to(device).T

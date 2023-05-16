@@ -18,9 +18,14 @@ class TwoStageBaseline(nn.Module):
 		return self.grounder(img, queries) # (M, H, W), bool
 
 	@torch.no_grad()
-	def predict_grasp(self, imgs, masks):
-		# imgs: (B, C, H, W), # masks: (B, H, W)
-		pass		
+	def predict_grasps(self, rgb, depth):
+		# rgb: (B, 3, H, W), # rgb: (B, H, W)
+		pass
+
+	def isolate_mask_in_grasp(self, grasp_out, masks):
+		# grasp_out: [pos,qua,ang,wid : (B, H, W)], # masks: (B, H, W)
+		grasp_qua_mask = grasp_out["qua"]
+		masks = masks.astype(n.float32)		
 
 	@torch.no_grad()
 	def predict(self, ):

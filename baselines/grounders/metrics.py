@@ -22,8 +22,7 @@ import cv2
 def segmentation_metrics(preds, masks, device):
     iou_list = []
     for pred, mask in zip(preds, masks):
-        # pred: (H, W): bool, mask: (H, W): uint8
-        mask = mask.bool()
+        # pred: (H, W): bool, mask: (H, W): bool
         # iou
         inter = np.logical_and(pred, mask)
         union = np.logical_or(pred, mask)

@@ -17,7 +17,7 @@ from skimage.filters import gaussian
 class GraspTransforms:
     # Class for converting cv2-like rectangle formats and generate grasp-quality-angle-width masks
 
-    def __init__(self, width_factor=100, width=640, height=480):
+    def __init__(self, width_factor=150, width=640, height=480):
         self.width_factor = width_factor
         self.width = width 
         self.height = height
@@ -80,6 +80,7 @@ class GraspTransforms:
             wid_out[cc, rr] = np.clip(w_rect, 0.0, self.width_factor) / self.width_factor
         
         qua_out = gaussian(pos_out, 3, preserve_range=True)
+        #ang_out = gaussian(ang_out, 2, preserve_range=True)
         wid_out = gaussian(wid_out, 3, preserve_range=True)
         
         return {'pos': pos_out, 
@@ -100,7 +101,8 @@ class OCIDVLGDataset(data.Dataset):
                  transform_grasp = GraspTransforms(),
                  with_depth = True, 
                  with_segm_mask = True,
-                 with_grasp_masks = True
+                 with_grasp_masks = True,
+                 with_instance_mask = False
     ):
         super(OCIDVLGDataset, self).__init__()
         self.root_dir = root_dir
@@ -110,13 +112,14 @@ class OCIDVLGDataset(data.Dataset):
                           'test': 'test_expressions.json'
                          }
         self.split = split
-        self.refer_dir = os.path.join(root_dir, "OCID-Ref")
+        self.refer_dir = os.path.join(root_dir, "OCID-Ref-hil")
         
         self.transform_img = transform_img
         self.transform_grasp = transform_grasp
         self.with_depth = with_depth
         self.with_segm_mask = with_segm_mask
         self.with_grasp_masks = with_grasp_masks
+        self.with_instance_mask = with_instance_mask
         # assert (self.transform_grasp and self.with_grasp_masks) or (not self.transform_grasp and not self.with_grasp_masks)
 
         self._load_dicts()
@@ -135,30 +138,59 @@ class OCIDVLGDataset(data.Dataset):
         self.instance_idx_to_class_idx = sub_to_class
         os.chdir(cwd)
 
+    def _load_grasp_txt(self, n):
+        annos_path = os.path.join(self.root_dir, self.grasp_annos[n])
+        sent_id = self.sent_indices[n]
+        sent = self.sentences[n]
+        target = self.targets[n]
+        target_idx = self.class_instance_names[target]
+        assert sent_id in os.listdir(annos_path)
+        img_name = self.img_names[n]
+        anno_path = os.path.join(annos_path, str(sent_id),  img_name.split('.')[0] + '.txt')
+        with open(anno_path, "r") as f:
+            points_list, boxes_list = [], []
+            for count, line in enumerate(f):
+                line = line.rstrip()
+                [x, y] = line.split(' ')
+                
+                x, y = float(x), float(y)
+                pt = (x, y)
+                points_list.append(pt)
+                
+                if len(points_list) == 4:
+                    boxes_list.append(points_list)
+                    points_list = []
+        
+            box_array = np.asarray(boxes_list)
+        return box_array
+
     def _load_split(self):
         refer_data = json.load(open(os.path.join(self.refer_dir, self.split_map[self.split])))
         self.imgs, self.depth_imgs, self.masks, self.scene_ids = [], [], [], []
-        self.grasp_annos = []
-        self.sentences, self.targets = [], []
+        self.grasp_annos, self.grasps = [], []
+        self.masks_instance = []
+        self.sentences, self.targets, self.bboxes = [], [], []
         self.all_items, self.img_names, self.seq_paths, self.sent_indices = [], [], [], []
         self.sent_to_index = {}
         n = 0
         for sent_id, item in refer_data.items():
-            
             seq_path, im_name = item["sequence_path"], item["scene_path"].split('/')[-1]
             scene_id = ','.join([seq_path,im_name])
             self.sent_indices.append(sent_id)
             self.seq_paths.append(seq_path)
             self.img_names.append(im_name)
             self.scene_ids.append(scene_id)
+            self.bboxes.append(eval(item['bbox']))
             self.all_items.append(item)
             self.sentences.append(item['sentence'])
             self.targets.append(item["class_instance"])
             self.imgs.append(item["scene_path"])
             self.depth_imgs.append(os.path.join(seq_path, "depth", im_name))
             self.masks.append(os.path.join(seq_path, "seg_mask_sublabeled_combi", im_name))
+            self.masks_instance.append(os.path.join(seq_path, "seg_mask_instances_combi", im_name))
             self.grasp_annos.append(os.path.join(seq_path, "Annotations_per_instance", im_name.split('.')[0]))  
             self.sent_to_index[sent_id] = n
+            self.grasps.append(self._load_grasp_txt(n))
             n += 1
             
     def get_index_from_sent(self, sent_id):
@@ -173,39 +205,23 @@ class OCIDVLGDataset(data.Dataset):
         scene_id = self.scene_ids[n]
         
         img_name = self.img_names[n]
-        annos_path = os.path.join(self.root_dir, self.grasp_annos[n])
+        # annos_path = os.path.join(self.root_dir, self.grasp_annos[n])
         
-        # img_bgr = cv2.imread(img_path)
-        # img = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
         img_path = os.path.join(self.root_dir, self.imgs[n])
         img = self.get_image_from_path(img_path)
-        bbox = eval(self.all_items[n]['bbox'])
+        
+        bbox = self.bboxes[n]
         
         sent = self.sentences[n]
+        
         target = self.targets[n]
         target_idx = self.class_instance_names[target]
-        assert sent_id in os.listdir(annos_path)
         
-        # anno_path = os.path.join(annos_path, str(target_idx),  img_name.split('.')[0] + '.txt')
-        anno_path = os.path.join(annos_path, str(sent_id),  img_name.split('.')[0] + '.txt')
-        with open(anno_path, "r") as f:
-                points_list, boxes_list = [], []
-                for count, line in enumerate(f):
-                    line = line.rstrip()
-                    [x, y] = line.split(' ')
-                    
-                    x, y = float(x), float(y)
-                    pt = (x, y)
-                    points_list.append(pt)
-                    
-                    if len(points_list) == 4:
-                        boxes_list.append(points_list)
-                        points_list = []
-            
-                box_array = np.asarray(boxes_list)
+        grasps = self.grasps[n]
         
         result = {'img': self.transform_img(img) if self.transform_img else img, 
-                  'grasps': self.transform_grasp(box_array, target_idx) if self.transform_grasp else box_array,
+                  'grasps':  grasps,
+                  'grasp_rects': self.transform_grasp(grasps, target_idx) if self.transform_grasp else None,
                   'sentence': sent,
                   'target': target,
                   'bbox': bbox,
@@ -218,7 +234,12 @@ class OCIDVLGDataset(data.Dataset):
             depth_path = os.path.join(self.root_dir, self.depth_imgs[n])
             depth = self.get_depth_from_path(depth_path)
             result = {**result, 'depth': torch.from_numpy(depth) if self.transform_img else depth}
-        
+
+        if self.with_instance_mask:
+            mask_path = os.path.join(self.root_dir, self.masks_instance[n])
+            mask = self.get_mask_from_path(mask_path)
+            result = {**result, 'mask_instance': torch.from_numpy(mask) if self.transform_img else mask}
+
         if self.with_segm_mask:
             mask_path = os.path.join(self.root_dir, self.masks[n])
             msk_full = self.get_mask_from_path(mask_path)
@@ -226,7 +247,7 @@ class OCIDVLGDataset(data.Dataset):
             result = {**result, 'mask': torch.from_numpy(msk) if self.transform_img else msk}
 
         if self.with_grasp_masks:
-            grasp_masks = self.transform_grasp.generate_masks(result['grasps'])
+            grasp_masks = self.transform_grasp.generate_masks(result['grasp_rects'])
             result = {**result, 'grasp_masks': grasp_masks}
         
         return result
@@ -266,12 +287,9 @@ class OCIDVLGDataset(data.Dataset):
         img, sent, grasps, bbox = sample['img'], sample['sentence'], sample['grasps'], sample['bbox']
         if self.transform_img:
             img = np.asarray(tfn.to_pil_image(img))
-        if self.transform_grasp:
-            #grasps = list(map(self.transform_grasp_inv, list(grasps)))
-            grasps = self.transform_grasp.inverse(grasps)
 
         tmp = img.copy()
-        for entry in grasps:
+        for entry in sample['grasps']:
                 ptA, ptB, ptC, ptD = [list(map(int, pt.tolist())) for pt in entry]
                 tmp = cv2.line(tmp, ptA, ptB, (0,0,0xff), 2)
                 tmp = cv2.line(tmp, ptD, ptC, (0,0,0xff), 2)

@@ -112,7 +112,7 @@ class OCIDVLGDataset(data.Dataset):
                           'test': 'test_expressions.json'
                          }
         self.split = split
-        self.refer_dir = os.path.join(root_dir, "OCID-Ref-hil")
+        self.refer_dir = os.path.join(root_dir, "OCID-Ref")
         
         self.transform_img = transform_img
         self.transform_grasp = transform_grasp

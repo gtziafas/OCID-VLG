@@ -51,7 +51,9 @@ There are currently four different splits of the dataset, namely:
 2. `unique`: Random train-val-test split (70%-10%-20%) where each split contains unique scenes from OCID dataset, where in each scene there is only one referring expression per target object.
 3. `novel-instances`: The test split contains referring expressions for object instances that are not existent in the train-val splist (see `OCID_sub_class_dict.py` in downloaded data for details on seen-unseen instances). All object classes are seen during training.
 4. `novel-classes`: The test split contains referring expressions for object classes that are not existent in the train-val splist (see `OCID_sub_class_dict.py` in downloaded data for details on seen-unseen classes).
-5. 
+
+You can get each version from the dataset API by passing the `version` key when initializing the dataset.
+
 ## Benchmarking
 Placeholder
 

@@ -13,7 +13,7 @@ Create a python3 venv and use ``pip install -r requirements.txt``.
 ## Dataset
 
 ### Download
-Download our OCID-VLG dataset from [this HTTP URL](https://drive.google.com/file/d/16SWMqiEJPjE2ERn9oupPKiHYVbLuUEk5/view?usp=share_link) and export it in your desired ``$ROOT`` path.
+Download our OCID-VLG dataset from [this HTTP URL](https://drive.google.com/file/d/1VwcjgyzpKTaczovjPNAHjh-1YvWz9Vmt/view?usp=share_link) and export it in your desired ``$ROOT`` path.
 
 ### Load API
 You can load the dataset using the ``OCIDVLGDataset`` class provided in this repo, which inherits from ``torch.utils.data.Dataset``. The usage is as following:

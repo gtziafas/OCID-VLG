@@ -102,97 +102,66 @@ class OCIDVLGDataset(data.Dataset):
                  with_depth = True, 
                  with_segm_mask = True,
                  with_grasp_masks = True,
-                 with_instance_mask = False
+                 version = "multiple"
     ):
         super(OCIDVLGDataset, self).__init__()
         self.root_dir = root_dir
-        self.split_dir = os.path.join(root_dir, "data_split")
+        self.version = version
         self.split_map = {'train': 'train_expressions.json', 
                           'val': 'val_expressions.json',
                           'test': 'test_expressions.json'
                          }
         self.split = split
-        self.refer_dir = os.path.join(root_dir, "OCID-Ref")
+        self.refer_dir = os.path.join(root_dir, "refer", version)
         
         self.transform_img = transform_img
         self.transform_grasp = transform_grasp
         self.with_depth = with_depth
         self.with_segm_mask = with_segm_mask
         self.with_grasp_masks = with_grasp_masks
-        self.with_instance_mask = with_instance_mask
-        # assert (self.transform_grasp and self.with_grasp_masks) or (not self.transform_grasp and not self.with_grasp_masks)
-
+        
         self._load_dicts()
         self._load_split()
 
     def _load_dicts(self):
         cwd = os.getcwd()
         os.chdir(self.root_dir)
-        from OCID_sub_class_dict import cnames, colors, subnames, sub_to_class
+        from OCID_sub_class_dict import cnames, subnames, instance_to_class
         cnames_inv = {int(v):k for k,v in cnames.items()}
         subnames_inv = {v:k for k,v in subnames.items()}
         self.class_names = cnames 
         self.idx_to_class = cnames_inv
         self.class_instance_names = subnames
         self.idx_to_class_instance = subnames_inv
-        self.instance_idx_to_class_idx = sub_to_class
+        self.instance_idx_to_class_idx = instance_to_class
         os.chdir(cwd)
-
-    def _load_grasp_txt(self, n):
-        annos_path = os.path.join(self.root_dir, self.grasp_annos[n])
-        sent_id = self.sent_indices[n]
-        sent = self.sentences[n]
-        target = self.targets[n]
-        target_idx = self.class_instance_names[target]
-        assert sent_id in os.listdir(annos_path)
-        img_name = self.img_names[n]
-        anno_path = os.path.join(annos_path, str(sent_id),  img_name.split('.')[0] + '.txt')
-        with open(anno_path, "r") as f:
-            points_list, boxes_list = [], []
-            for count, line in enumerate(f):
-                line = line.rstrip()
-                [x, y] = line.split(' ')
-                
-                x, y = float(x), float(y)
-                pt = (x, y)
-                points_list.append(pt)
-                
-                if len(points_list) == 4:
-                    boxes_list.append(points_list)
-                    points_list = []
-        
-            box_array = np.asarray(boxes_list)
-        return box_array
 
     def _load_split(self):
         refer_data = json.load(open(os.path.join(self.refer_dir, self.split_map[self.split])))
-        self.imgs, self.depth_imgs, self.masks, self.scene_ids = [], [], [], []
-        self.grasp_annos, self.grasps = [], []
-        self.masks_instance = []
-        self.sentences, self.targets, self.bboxes = [], [], []
-        self.all_items, self.img_names, self.seq_paths, self.sent_indices = [], [], [], []
-        self.sent_to_index = {}
+        self.seq_paths, self.img_names, self.scene_ids = [], [], []
+        self.bboxes, self.grasps = [], []
+        self.sent_to_index, self.sent_indices = {}, []
+        self.rgb_paths, self.depth_paths, self.mask_paths = [], [], []
+        self.targets, self.sentences, self.semantics, self.objIDs = [], [], [], []
         n = 0
-        for sent_id, item in refer_data.items():
-            seq_path, im_name = item["sequence_path"], item["scene_path"].split('/')[-1]
-            scene_id = ','.join([seq_path,im_name])
-            self.sent_indices.append(sent_id)
+        for item in refer_data['data']:
+            seq_path, im_name = item['image_filename'].split(',')
             self.seq_paths.append(seq_path)
             self.img_names.append(im_name)
-            self.scene_ids.append(scene_id)
-            self.bboxes.append(eval(item['bbox']))
-            self.all_items.append(item)
-            self.sentences.append(item['sentence'])
-            self.targets.append(item["class_instance"])
-            self.imgs.append(item["scene_path"])
-            self.depth_imgs.append(os.path.join(seq_path, "depth", im_name))
-            self.masks.append(os.path.join(seq_path, "seg_mask_sublabeled_combi", im_name))
-            self.masks_instance.append(os.path.join(seq_path, "seg_mask_instances_combi", im_name))
-            self.grasp_annos.append(os.path.join(seq_path, "Annotations_per_instance", im_name.split('.')[0]))  
-            self.sent_to_index[sent_id] = n
-            self.grasps.append(self._load_grasp_txt(n))
+            self.scene_ids.append(item['image_filename'])
+            self.bboxes.append(item['box'])
+            self.grasps.append(item['grasps'])
+            self.objIDs.append(item['answer'])
+            self.targets.append(item['target'])
+            self.sentences.append(item['question'])
+            self.semantics.append(item['program'])
+            self.rgb_paths.append(os.path.join(seq_path, "rgb", im_name))
+            self.depth_paths.append(os.path.join(seq_path, "depth", im_name))
+            self.mask_paths.append(os.path.join(seq_path, "seg_mask_instances_combi", im_name))
+            self.sent_indices.append(item['question_index'])
+            self.sent_to_index[item['question_index']] = n
             n += 1
-            
+
     def get_index_from_sent(self, sent_id):
         return self.sent_to_index[sent_id]
 
@@ -203,47 +172,42 @@ class OCIDVLGDataset(data.Dataset):
         n = self.get_index_from_sent(sent_id)
         
         scene_id = self.scene_ids[n]
-        
-        img_name = self.img_names[n]
-        # annos_path = os.path.join(self.root_dir, self.grasp_annos[n])
-        
-        img_path = os.path.join(self.root_dir, self.imgs[n])
+       
+        img_path = os.path.join(self.root_dir, self.rgb_paths[n])
         img = self.get_image_from_path(img_path)
         
-        bbox = self.bboxes[n]
+        x, y, w, h = self.bboxes[n]
+        bbox = np.asarray([x, y, x+w, y+h])
         
         sent = self.sentences[n]
         
         target = self.targets[n]
         target_idx = self.class_instance_names[target]
+        objID = self.objIDs[n]
         
-        grasps = self.grasps[n]
+        grasps = np.asarray(self.grasps[n])
         
         result = {'img': self.transform_img(img) if self.transform_img else img, 
                   'grasps':  grasps,
                   'grasp_rects': self.transform_grasp(grasps, target_idx) if self.transform_grasp else None,
                   'sentence': sent,
                   'target': target,
+                  'objID': objID,
                   'bbox': bbox,
                   'target_idx': target_idx,
                   'sent_id': sent_id,
-                  'scene_id': scene_id
+                  'scene_id': scene_id,
                  }
         
         if self.with_depth:
-            depth_path = os.path.join(self.root_dir, self.depth_imgs[n])
+            depth_path = os.path.join(self.root_dir, self.depth_paths[n])
             depth = self.get_depth_from_path(depth_path)
             result = {**result, 'depth': torch.from_numpy(depth) if self.transform_img else depth}
 
-        if self.with_instance_mask:
-            mask_path = os.path.join(self.root_dir, self.masks_instance[n])
-            mask = self.get_mask_from_path(mask_path)
-            result = {**result, 'mask_instance': torch.from_numpy(mask) if self.transform_img else mask}
-
         if self.with_segm_mask:
-            mask_path = os.path.join(self.root_dir, self.masks[n])
+            mask_path = os.path.join(self.root_dir, self.mask_paths[n])
             msk_full = self.get_mask_from_path(mask_path)
-            msk = np.where(msk_full == target_idx, True, False)
+            msk = np.where(msk_full == objID, True, False)
             result = {**result, 'mask': torch.from_numpy(msk) if self.transform_img else msk}
 
         if self.with_grasp_masks:
@@ -253,7 +217,7 @@ class OCIDVLGDataset(data.Dataset):
         return result
 
     def __len__(self):
-        return len(self.all_items)
+        return len(self.sent_indices)
     
     def __getitem__(self, n):
         sent_id = self.get_sent_from_index(n)

@@ -45,6 +45,13 @@ The sample structure is:
 
 you can further pass a transform for your images (e.g. standard ``torchvision.transforms``) when defining the dataset, using the key ``transform_img``, to introduce your desired pre-processing. This will affect the `img` component, `depth` and `mask` will be simply tensorized. If you just want the grasp rectangles without pixel-level mask, pass ``transform_grasp=None`` when defining the dataset.
 
+### Versions
+There are currently four different splits of the dataset, namely:
+1. `multiple`: Random train-val-test split (70%-10%-20%) where each split contains unique scenes from OCID dataset, but in each scene multiple referring expressions for the same target object.
+2. `unique`: Random train-val-test split (70%-10%-20%) where each split contains unique scenes from OCID dataset, where in each scene there is only one referring expression per target object.
+3. `novel-instances`: The test split contains referring expressions for object instances that are not existent in the train-val splist (see `OCID_sub_class_dict.py` in downloaded data for details on seen-unseen instances). All object classes are seen during training.
+4. `novel-classes`: The test split contains referring expressions for object classes that are not existent in the train-val splist (see `OCID_sub_class_dict.py` in downloaded data for details on seen-unseen classes).
+5. 
 ## Benchmarking
 Placeholder
 

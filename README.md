@@ -5,7 +5,7 @@
   <img src="media/example.png" width="640" title="">
 </p>
 
-This dataset studies the task of language-guided grasping in an end-to-end fashion. Previous works usually study such tasks in synthetic lab environments, which have a big distribution gap to natural household scenes, that usually include clutter. To that end, we provide a dataset based on OCID-Grasp, where in each scene we provide a referring expression in natural language to uniquely describe a target object, along with ground truth grasp rectangles. We benchmark our dataset for both *Referring Image Segmentation*, where the purpose is to segment a pixel-level mask of the referred object, as well as *Referring Object Grasping*, where the purpose is to also predict grasp rectangles for the referred object. It consists of 89,639 image-text-mask-grasp tuples from 1763 unique scenes from the OCID dataset.
+This dataset studies the task of language-guided grasping in an end-to-end fashion. Previous works usually study such tasks in synthetic lab environments, which have a big distribution gap to natural household scenes, that usually include clutter. To that end, we provide a dataset based on OCID-Grasp, where in each scene we provide a referring expression in natural language to uniquely describe a target object, along with ground truth grasp rectangles. We benchmark our dataset for both *Referring Image Segmentation*, where the purpose is to segment a pixel-level mask of the referred object, as well as *Referring Grasp Synthesis*, where the purpose is to also predict grasp rectangles for the referred object. OCID-VLG contains 89,639 image-text-mask-grasp tuples from 1763 unique scenes from the OCID dataset.
 
 ## Requirements
 Create a python3 venv and use ``pip install -r requirements.txt``.

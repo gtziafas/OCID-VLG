@@ -54,6 +54,8 @@ There are currently four different splits of the dataset, namely:
 
 You can get each version from the dataset API by passing the `version` key when initializing the dataset.
 
+## Model
+We also release an end-to-end baseline model for our proposed dataset, [CROG](https://github.com/HilbertXu/Language-guided-Robot-Grasping.git). Follow instructions in the repo for re-producing our results.
 
 ## Acknowledgments
 This dataset builds upon previous works on OCID dataset, namely:

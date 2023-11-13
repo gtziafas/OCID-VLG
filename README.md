@@ -54,14 +54,6 @@ There are currently four different splits of the dataset, namely:
 
 You can get each version from the dataset API by passing the `version` key when initializing the dataset.
 
-## Benchmarking
-Placeholder
-
-### Referring Image Segmentation
-placeholder
-
-### Referring Object Grasping
-placeholder
 
 ## Acknowledgments
 This dataset builds upon previous works on OCID dataset, namely:

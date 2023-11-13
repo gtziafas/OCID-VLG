@@ -61,4 +61,15 @@ We also release an end-to-end baseline model for our proposed dataset, [CROG](ht
 This dataset builds upon previous works on OCID dataset, namely:
 1. [OCID](https://www.acin.tuwien.ac.at/en/vision-for-robotics/software-tools/object-clutter-indoor-dataset) ({A} Semi-Automatic Pixel-wise Object Annotation Tool for Creating Robotic {RGB-D} Datasets.)
 2. [OCID-Grasp](https://github.com/stefan-ainetter/grasp_det_seg_cnn) (Ainetter, Stefan and Friedrich Fraundorfer. “End-to-end Trainable Deep Neural Network for Robotic Grasp Detection and Semantic Segmentation from RGB.” 2021 IEEE International Conference on Robotics and Automation (ICRA) (2021): 13452-13458.)
-3. [OCID-Ref](https://github.com/lluma/OCID-Ref) (Wang, Ke-Jyun et al. “OCID-Ref: A 3D Robotic Dataset With Embodied Language For Clutter Scene Grounding.” North American Chapter of the Association for Computational Linguistics (2021).)
+3. [OCID-Ref](https://github.com/lluma/OCID-Ref) (Wang, Ke-Jyun et al. “OCID-Ref: A 3D Robotic Dataset With Embodied Language For Clutter Scene Grounding.” North American Chapter of the Association for Computational Linguistics (2021).)   
+
+## Citation
+If you find our dataset useful for your research, please consider citing:
+```
+@inproceedings{tziafas2023language,
+  title={Language-guided Robot Grasping: CLIP-based Referring Grasp Synthesis in Clutter},
+  author={Tziafas, Georgios and Yucheng, XU and Goel, Arushi and Kasaei, Mohammadreza and Li, Zhibin and Kasaei, Hamidreza},
+  booktitle={7th Annual Conference on Robot Learning},
+  year={2023}
+}
+```
